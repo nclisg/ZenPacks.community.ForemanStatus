@@ -14,8 +14,13 @@ foreman = sys.argv[1]
 host = sys.argv[2]
 
 request = ('https://' + foreman + '/api/hosts/' + host)
-with contextlib.closing(urllib2.urlopen(request)) as response:
-    data = response.read()
+
+try:
+    with contextlib.closing(urllib2.urlopen(request)) as response:
+        data = response.read()
+except urllib2.HTTPError:
+    print "Host not found on Foreman"
+    sys.exit(1)
 
 parsed = json.loads(data)
 
@@ -34,17 +39,17 @@ if parsed.get('global_status_label') is not None:
   
     result += globalstatus + ' Foreman Status: '
 else:
-    print "Foreman Error:"
+    print "Foreman Error"
     sys.exit(3)
  
 if parsed.get('configuration_status_label') is not None:
     confstatus = parsed['configuration_status_label'] 
-    result += 'Config ' + confstatus + ','
+    result += 'Config ' + confstatus
 
 
 if parsed.get('build_status_label') is not None:
     buildstatus = parsed['build_status_label']
-    result += ' Build ' + buildstatus
+    result += ', Build ' + buildstatus
 
 print result
 sys.exit(returncode)
